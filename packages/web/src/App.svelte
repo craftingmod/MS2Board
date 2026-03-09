@@ -46,7 +46,15 @@
 </script>
 
 <main>
-  <h1>MS2 Archive</h1>
+  <h1 style="margin-bottom: 8px;">
+    <a
+      href="/"
+      on:click|preventDefault={() => navigate("/", new URLSearchParams())}
+      style="color: inherit; text-decoration: none;"
+    >
+      MS2 Archive
+    </a>
+  </h1>
   <p class="meta">
     Browse archived MapleStory2 board posts from <code>ms2archive.db</code>.
   </p>

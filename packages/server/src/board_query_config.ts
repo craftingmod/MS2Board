@@ -14,6 +14,7 @@ export type BoardQueryConfig = BoardDefinition & {
   contentExpr: string
   attachmentsExpr: string
   hasTitleColumn: boolean
+  commentTableName: string
 }
 
 const QUERY_OVERRIDES: Partial<Record<BoardSlug, Partial<BoardQueryConfig>>> = {
@@ -49,6 +50,7 @@ export const BOARD_QUERY_CONFIGS: BoardQueryConfig[] = BOARD_DEFINITIONS.map(
       contentExpr: "content",
       attachmentsExpr: "attachments",
       hasTitleColumn: true,
+      commentTableName: board.tableName.replace(/Board$/, "Comment"),
     }
 
     return {

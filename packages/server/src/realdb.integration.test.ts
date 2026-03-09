@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { getDefaultArchiveDbPath, openArchiveDatabase } from "./database"
 import { createPostRepository } from "./repository"
 
-test("real archive integration: list and search", () => {
+test("real archive integration: list, search, and comments", () => {
   const dbPath = getDefaultArchiveDbPath()
 
   let db
@@ -45,5 +45,18 @@ test("real archive integration: list and search", () => {
   })
 
   expect(searched.total).toBeGreaterThan(0)
+
+  const comments = repository.listPostComments(
+    representative.board.slug,
+    representative.articleId,
+    {
+      page: 1,
+      pageSize: 10,
+    },
+  )
+
+  expect(Array.isArray(comments.items)).toBeTrue()
+  expect(comments.page).toBe(1)
+
   db.close()
 })

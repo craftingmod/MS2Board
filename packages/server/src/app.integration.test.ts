@@ -39,6 +39,20 @@ CREATE TABLE QnABoard (
   commentCount INTEGER NOT NULL,
   tags TEXT
 );
+CREATE TABLE FreeComment (
+  articleId INTEGER NOT NULL,
+  commentIndex INTEGER NOT NULL,
+  authorName TEXT NOT NULL,
+  content TEXT NOT NULL,
+  createdAt INTEGER NOT NULL
+);
+CREATE TABLE QnAComment (
+  articleId INTEGER NOT NULL,
+  commentIndex INTEGER NOT NULL,
+  authorName TEXT NOT NULL,
+  content TEXT NOT NULL,
+  createdAt INTEGER NOT NULL
+);
 INSERT INTO FreeBoard (
   articleId,
   title,
@@ -66,6 +80,11 @@ INSERT INTO QnABoard (
   tags
 ) VALUES
   (3, 'Need alpha help', 'Carol', 3, 60, 1700000002000, 5, 'question');
+INSERT INTO FreeComment (articleId, commentIndex, authorName, content, createdAt) VALUES
+  (1, 0, 'Dora', 'first', 1700000000100),
+  (1, 1, 'Evan', 'second', 1700000000200);
+INSERT INTO QnAComment (articleId, commentIndex, authorName, content, createdAt) VALUES
+  (3, 0, 'Fiona', 'answer', 1700000000300);
 `)
 
   return db
@@ -128,6 +147,34 @@ describe("API integration", () => {
     }
     expect(body.articleId).toBe(1)
     expect(body.board.slug).toBe("free")
+
+    db.close()
+  })
+
+  test("returns comments in descending order with pagination", async () => {
+    const db = createTestDatabase()
+    const repository = createPostRepository(db, TEST_BOARD_CONFIGS)
+    const handler = createApiHandler(repository)
+
+    const response = await handler(
+      new Request(
+        "http://localhost/api/posts/free/1/comments?page=1&pageSize=1",
+      ),
+    )
+
+    expect(response.status).toBe(200)
+
+    const body = (await response.json()) as {
+      items: Array<{ commentIndex: number; authorName: string }>
+      total: number
+      hasNext: boolean
+    }
+
+    expect(body.total).toBe(2)
+    expect(body.items).toHaveLength(1)
+    expect(body.items[0]?.commentIndex).toBe(1)
+    expect(body.items[0]?.authorName).toBe("Evan")
+    expect(body.hasNext).toBeTrue()
 
     db.close()
   })

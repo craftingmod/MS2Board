@@ -1,5 +1,5 @@
 {
-  "name": "ms2board-build",
+  "name": "@ms2board/build",
   "module": "src/index.ts",
   "type": "module",
   "private": true,

@@ -52,6 +52,13 @@ export type PostDetail = PostListItem & {
   attachments: string | null
 }
 
+export type PostComment = {
+  commentIndex: number
+  authorName: string
+  content: string
+  createdAt: string
+}
+
 export type PagedResponse<T> = {
   items: T[]
   page: number

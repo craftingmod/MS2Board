@@ -36,6 +36,20 @@ CREATE TABLE QnABoard (
   commentCount INTEGER NOT NULL,
   tags TEXT
 );
+CREATE TABLE FreeComment (
+  articleId INTEGER NOT NULL,
+  commentIndex INTEGER NOT NULL,
+  authorName TEXT NOT NULL,
+  content TEXT NOT NULL,
+  createdAt INTEGER NOT NULL
+);
+CREATE TABLE QnAComment (
+  articleId INTEGER NOT NULL,
+  commentIndex INTEGER NOT NULL,
+  authorName TEXT NOT NULL,
+  content TEXT NOT NULL,
+  createdAt INTEGER NOT NULL
+);
 `)
 
   db.exec(`
@@ -68,6 +82,13 @@ INSERT INTO QnABoard (
   tags
 ) VALUES
   (3, 'Need alpha help', 'Carol', 3, 60, 1700000002000, 5, 'question');
+
+INSERT INTO FreeComment (articleId, commentIndex, authorName, content, createdAt) VALUES
+  (1, 0, 'Dora', 'first', 1700000000100),
+  (1, 1, 'Evan', 'second', 1700000000200);
+
+INSERT INTO QnAComment (articleId, commentIndex, authorName, content, createdAt) VALUES
+  (3, 0, 'Fiona', 'answer', 1700000000300);
 `)
 
   return db
@@ -146,6 +167,36 @@ describe("createPostRepository", () => {
 
     const missing = repository.getPostDetail("free", 999)
     expect(missing).toBeNull()
+
+    db.close()
+  })
+
+  test("returns comments in descending order with pagination", () => {
+    const db = createTestDatabase()
+    const repository = createPostRepository(db, TEST_BOARD_CONFIGS)
+
+    const firstPage = repository.listPostComments("free", 1, {
+      page: 1,
+      pageSize: 1,
+    })
+
+    expect(firstPage.total).toBe(2)
+    expect(firstPage.items).toHaveLength(1)
+    expect(firstPage.items[0]?.commentIndex).toBe(1)
+    expect(firstPage.items[0]?.authorName).toBe("Evan")
+    expect(firstPage.hasNext).toBeTrue()
+
+    const secondPage = repository.listPostComments("free", 1, {
+      page: 2,
+      pageSize: 1,
+    })
+
+    expect(secondPage.items[0]?.commentIndex).toBe(0)
+    expect(secondPage.hasNext).toBeFalse()
+
+    const empty = repository.listPostComments("free", 999)
+    expect(empty.total).toBe(0)
+    expect(empty.items).toHaveLength(0)
 
     db.close()
   })

@@ -188,6 +188,32 @@ export function createApiHandler(
       }
     }
 
+    const commentsMatch = url.pathname.match(
+      /^\/api\/posts\/([^/]+)\/(\d+)\/comments$/,
+    )
+
+    if (commentsMatch) {
+      const board = decodeURIComponent(commentsMatch[1])
+      const articleId = Number(commentsMatch[2])
+      const page = parsePositiveNumber(url.searchParams.get("page"), 1)
+      const pageSize = parsePositiveNumber(url.searchParams.get("pageSize"), 20)
+
+      try {
+        const response = repository.listPostComments(board, articleId, {
+          page,
+          pageSize,
+        })
+        return toJsonResponse(response)
+      } catch (error) {
+        if (error instanceof InvalidBoardError) {
+          return toErrorResponse(error.message, 400)
+        }
+
+        console.error(error)
+        return toErrorResponse("Internal server error", 500)
+      }
+    }
+
     const detailMatch = url.pathname.match(/^\/api\/posts\/([^/]+)\/(\d+)$/)
     if (detailMatch) {
       const board = decodeURIComponent(detailMatch[1])

@@ -5,6 +5,7 @@ import {
   type BoardMeta,
   type BoardSlug,
   type PagedResponse,
+  type PostComment,
   type PostDetail,
   type PostListItem,
   type SortOption,
@@ -22,6 +23,11 @@ type ListPostsOptions = {
   page?: number
   pageSize?: number
   sort?: SortOption
+}
+
+type ListPostCommentsOptions = {
+  page?: number
+  pageSize?: number
 }
 
 type RawListRow = {
@@ -45,6 +51,13 @@ type RawDetailRow = RawListRow & {
   tags: string | null
   content: string | null
   attachments: string | null
+}
+
+type RawCommentRow = {
+  commentIndex: number
+  authorName: string
+  content: string
+  createdAt: number
 }
 
 export class InvalidBoardError extends Error {
@@ -168,6 +181,15 @@ function mapDetailRow(row: RawDetailRow): PostDetail {
   }
 }
 
+function mapCommentRow(row: RawCommentRow): PostComment {
+  return {
+    commentIndex: row.commentIndex,
+    authorName: row.authorName,
+    content: row.content,
+    createdAt: toIso(row.createdAt),
+  }
+}
+
 export type PostRepository = ReturnType<typeof createPostRepository>
 
 export function createPostRepository(
@@ -282,11 +304,62 @@ LIMIT 1
     return mapDetailRow(row)
   }
 
+  function listPostComments(
+    board: string,
+    articleId: number,
+    options: ListPostCommentsOptions = {},
+  ): PagedResponse<PostComment> {
+    const config = resolveBoardConfig(board, boardConfigs)
+    const normalizedPage = normalizePositiveInt(options.page, 1)
+    const normalizedPageSize = normalizePositiveInt(options.pageSize, 20, 50)
+    const offset = (normalizedPage - 1) * normalizedPageSize
+
+    const countSql = `
+SELECT COUNT(*) AS total
+FROM ${config.commentTableName}
+WHERE articleId = ?
+`.trim()
+
+    const countStatement = db.query(countSql)
+    const countRow = countStatement.get(articleId) as { total: number } | null
+    const total = countRow?.total ?? 0
+
+    const commentsSql = `
+SELECT
+  commentIndex,
+  authorName,
+  content,
+  createdAt
+FROM ${config.commentTableName}
+WHERE articleId = ?
+ORDER BY commentIndex DESC, createdAt DESC
+LIMIT ? OFFSET ?
+`.trim()
+
+    const commentsStatement = db.query(commentsSql)
+    const rows = commentsStatement.all(
+      articleId,
+      normalizedPageSize,
+      offset,
+    ) as RawCommentRow[]
+
+    const items = rows.map((row) => mapCommentRow(row))
+
+    return {
+      items,
+      page: normalizedPage,
+      pageSize: normalizedPageSize,
+      total,
+      hasNext: offset + items.length < total,
+    }
+  }
+
   return {
     getBoards(): BoardMeta[] {
       return boardMetaList
     },
     listPosts,
     getPostDetail,
+    listPostComments,
   }
 }

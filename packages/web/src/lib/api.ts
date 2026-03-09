@@ -1,6 +1,7 @@
 import type {
   BoardMeta,
   PagedResponse,
+  PostComment,
   PostDetail,
   PostListItem,
   SortOption,
@@ -76,5 +77,20 @@ export async function fetchPostDetail(
 ): Promise<PostDetail> {
   return requestJson<PostDetail>(
     `/api/posts/${encodeURIComponent(boardSlug)}/${articleId}`,
+  )
+}
+
+export async function fetchPostComments(
+  boardSlug: string,
+  articleId: number,
+  page = 1,
+  pageSize = 20,
+): Promise<PagedResponse<PostComment>> {
+  const params = new URLSearchParams()
+  params.set("page", String(page))
+  params.set("pageSize", String(pageSize))
+
+  return requestJson<PagedResponse<PostComment>>(
+    `/api/posts/${encodeURIComponent(boardSlug)}/${articleId}/comments?${params.toString()}`,
   )
 }

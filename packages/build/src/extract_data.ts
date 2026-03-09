@@ -6,6 +6,7 @@ const Log = new ChocoLogger("ExtractData")
 
 const DIST_DIR = path.resolve(import.meta.dir, "../dist")
 const DATA_DIR = path.resolve(import.meta.dir, "../data")
+const DIRECTORIES_ARCHIVE = path.join(DATA_DIR, "directories.7z")
 
 async function commandExists(command: string): Promise<boolean> {
   try {
@@ -77,6 +78,24 @@ async function findFirstSplitArchive(): Promise<string> {
   return path.join(DIST_DIR, splitParts[0])
 }
 
+async function extractArchive(
+  sevenZip: string,
+  archivePath: string,
+  outputDir: string,
+  errorLabel: string,
+): Promise<void> {
+  const proc = Bun.spawn({
+    cmd: [sevenZip, "x", archivePath, `-o${outputDir}`, "-y"],
+    stdout: "inherit",
+    stderr: "inherit",
+  })
+
+  const exitCode = await proc.exited
+  if (exitCode !== 0) {
+    throw new Error(`${errorLabel} failed with exit code ${exitCode}`)
+  }
+}
+
 export async function extractData(): Promise<void> {
   const sevenZip = await find7zBinary()
   const archivePath = await findFirstSplitArchive()
@@ -87,15 +106,18 @@ export async function extractData(): Promise<void> {
   Log.info(`Extracting: ${archivePath}`)
   Log.info(`Output: ${DATA_DIR}`)
 
-  const proc = Bun.spawn({
-    cmd: [sevenZip, "x", archivePath, `-o${DATA_DIR}`, "-y"],
-    stdout: "inherit",
-    stderr: "inherit",
-  })
+  await extractArchive(sevenZip, archivePath, DATA_DIR, "Primary 7z extraction")
 
-  const exitCode = await proc.exited
-  if (exitCode !== 0) {
-    throw new Error(`7-Zip extraction failed with exit code ${exitCode}`)
+  if (await Bun.file(DIRECTORIES_ARCHIVE).exists()) {
+    Log.info(`Extracting nested archive: ${DIRECTORIES_ARCHIVE}`)
+    await extractArchive(
+      sevenZip,
+      DIRECTORIES_ARCHIVE,
+      DATA_DIR,
+      "Nested directories.7z extraction",
+    )
+  } else {
+    Log.info("Nested archive not found: directories.7z")
   }
 
   Log.info("Extraction completed.")

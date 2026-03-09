@@ -1,0 +1,22 @@
+{
+  "name": "ms2board",
+  "type": "module",
+  "version": "1.0.0",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "prettier": "prettier . --write",
+    "eslint": "eslint ."
+  },
+  "devDependencies": {
+    "eslint": "^10.0.3",
+    "eslint-config-prettier": "^10.1.8",
+    "globals": "^17.4.0",
+    "prettier": "3.8.1",
+    "typescript-eslint": "^8.56.1",
+    "@types/bun": "latest",
+    "typescript": "^5"
+  },
+  "private": true
+}

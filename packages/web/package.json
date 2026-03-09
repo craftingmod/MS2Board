@@ -1,0 +1,23 @@
+{
+  "name": "@ms2board/web",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "check": "svelte-check --tsconfig ./tsconfig.json",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@ms2board/common": "workspace:*",
+    "svelte": "latest"
+  },
+  "devDependencies": {
+    "@sveltejs/vite-plugin-svelte": "latest",
+    "@types/bun": "latest",
+    "svelte-check": "latest",
+    "typescript": "^5",
+    "vite": "latest"
+  }
+}

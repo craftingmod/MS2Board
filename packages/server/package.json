@@ -1,0 +1,21 @@
+{
+  "name": "@ms2board/server",
+  "module": "src/index.ts",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "dev": "bun --watch src/index.ts",
+    "start": "bun src/index.ts",
+    "ensure-indexes": "bun src/ensure_indexes.ts",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@ms2board/common": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/bun": "latest"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  }
+}

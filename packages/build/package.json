@@ -8,5 +8,8 @@
   },
   "peerDependencies": {
     "typescript": "^5"
+  },
+  "dependencies": {
+    "choco-logger": "github:craftingmod/choco-logger"
   }
 }

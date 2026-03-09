@@ -8,6 +8,8 @@ It currently supports:
 - Post detail rendering (sanitized HTML)
 - Image serving from archived assets (`/images/*`, forced to `.avif`)
 - Comment viewing in descending order with pagination
+- Full-screen event list and page routing from archived FSE HTML (`/events`, `/events/:date/:name`, `/events/:slug`)
+- Direct FSE resource routing (`/res/*`)
 
 ## Repository Structure
 
@@ -66,7 +68,7 @@ Default ports:
 - Server: `http://localhost:3000`
 - Web: `http://localhost:5173`
 
-The web dev server proxies `/api` and `/images` to the backend.
+The web dev server proxies `/api`, `/images`, `/events`, and `/res` to the backend.
 
 ## Environment Variables
 
@@ -94,8 +96,12 @@ bun run prettier
 - `GET /api/posts/:board/:articleId`
 - `GET /api/posts/:board/:articleId/comments?page=&pageSize=`
 - `GET /images/...` (served from `packages/build/data/images`, extension normalized to `.avif`)
+- `GET /events` (lists archived FSE pages)
+- `GET /events/:date/:name` (maps to `packages/build/data/fse/<date>_<name>.html`)
+- `GET /events/:slug` (maps to `packages/build/data/fse/<slug>.html`)
+- `GET /res/...` (served from `packages/build/data/fse/res/...`)
 
 ## Current Scope
 
-Current MVP focuses on archive post browsing and search in `ms2archive.db`.
-Other DB files (character/profile/guestbook/rank) and event HTML routing are out of current scope.
+Current MVP focuses on archive post browsing/search in `ms2archive.db` plus FSE event page routing.
+Other DB files (character/profile/guestbook/rank) are out of current scope.

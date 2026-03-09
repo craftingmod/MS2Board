@@ -56,7 +56,7 @@
     </a>
   </h1>
   <p class="meta">
-    Browse archived MapleStory2 board posts from <code>ms2archive.db</code>.
+    Browse archived MapleStory2 board posts from <code>ms2archive.db</code>.<a href="/events" style="margin-left: 8px;">View FullScreen Events</a>
   </p>
 
   {#if boardLoadError}
@@ -92,3 +92,4 @@
     </section>
   {/if}
 </main>
+

@@ -14,6 +14,14 @@ export default defineConfig({
         target: process.env.VITE_PROXY_TARGET ?? "http://localhost:3000",
         changeOrigin: true,
       },
+      "/events": {
+        target: process.env.VITE_PROXY_TARGET ?? "http://localhost:3000",
+        changeOrigin: true,
+      },
+      "/res": {
+        target: process.env.VITE_PROXY_TARGET ?? "http://localhost:3000",
+        changeOrigin: true,
+      },
     },
   },
 })

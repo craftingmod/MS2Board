@@ -8,6 +8,8 @@
 - 게시글 상세 렌더링(HTML 정제 후 표시)
 - 아카이브 이미지 제공(`/images/*`, 확장자는 `.avif`로 강제)
 - 댓글 최신순(내림차순) 조회 + 페이지네이션
+- 아카이브 FSE HTML 기반 전체화면 이벤트 목록/페이지 라우팅 (`/events`, `/events/:date/:name`, `/events/:slug`)
+- FSE 리소스 직접 라우팅(`/res/*`)
 
 ## 저장소 구성
 
@@ -66,7 +68,7 @@ bun run dev:web
 - 서버: `http://localhost:3000`
 - 웹: `http://localhost:5173`
 
-웹 개발 서버는 `/api`, `/images`를 백엔드로 프록시합니다.
+웹 개발 서버는 `/api`, `/images`, `/events`, `/res`를 백엔드로 프록시합니다.
 
 ## 환경 변수
 
@@ -94,8 +96,12 @@ bun run prettier
 - `GET /api/posts/:board/:articleId`
 - `GET /api/posts/:board/:articleId/comments?page=&pageSize=`
 - `GET /images/...` (`packages/build/data/images`에서 서빙, 확장자 `.avif`로 정규화)
+- `GET /events` (아카이브 FSE 페이지 목록)
+- `GET /events/:date/:name` (`packages/build/data/fse/<date>_<name>.html` 매핑)
+- `GET /events/:slug` (`packages/build/data/fse/<slug>.html` 매핑)
+- `GET /res/...` (`packages/build/data/fse/res/...`에서 서빙)
 
 ## 현재 범위
 
-현재 MVP 범위는 `ms2archive.db`의 게시글 조회/검색입니다.
-`ms2char.db`, `ms2profile.db`, `ms2guestbook.db`, `ms2rank.db` 및 이벤트 HTML 라우팅은 현재 범위 밖입니다.
+현재 MVP 범위는 `ms2archive.db` 게시글 조회/검색 + FSE 이벤트 페이지 라우팅입니다.
+`ms2char.db`, `ms2profile.db`, `ms2guestbook.db`, `ms2rank.db`는 현재 범위 밖입니다.

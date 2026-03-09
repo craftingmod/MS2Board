@@ -203,4 +203,97 @@ describe("API integration", () => {
     await rm(imageRoot, { recursive: true, force: true })
     db.close()
   })
+
+  test("serves events list from fse html files", async () => {
+    const db = createTestDatabase()
+    const repository = createPostRepository(db, TEST_BOARD_CONFIGS)
+
+    const fseRoot = path.resolve(import.meta.dir, "./.tmp-fse-root-list")
+    await mkdir(fseRoot, { recursive: true })
+    await Bun.write(path.join(fseRoot, "20220609_Event.html"), "<h1>Event</h1>")
+    await Bun.write(path.join(fseRoot, "ignore.html"), "<h1>Ignore</h1>")
+
+    const handler = createApiHandler(repository, { fseRootDir: fseRoot })
+
+    const response = await handler(new Request("http://localhost/events/"))
+
+    expect(response.status).toBe(200)
+    const body = await response.text()
+    expect(body).toContain("/events/20220609/Event")
+    expect(body).toContain("20220609_Event")
+    expect(body).toContain("/events/ignore")
+    expect(body).toContain(">ignore<")
+
+    await rm(fseRoot, { recursive: true, force: true })
+    db.close()
+  })
+
+  test("serves fse event html via /events/:date/:name", async () => {
+    const db = createTestDatabase()
+    const repository = createPostRepository(db, TEST_BOARD_CONFIGS)
+
+    const fseRoot = path.resolve(import.meta.dir, "./.tmp-fse-root-event")
+    await mkdir(fseRoot, { recursive: true })
+    await Bun.write(
+      path.join(fseRoot, "20220609_Event.html"),
+      '<h1>Event Body</h1><link href="res/20220609_Event/style.css" rel="stylesheet" />',
+    )
+
+    const handler = createApiHandler(repository, { fseRootDir: fseRoot })
+
+    const response = await handler(
+      new Request("http://localhost/events/20220609/Event"),
+    )
+
+    expect(response.status).toBe(200)
+    const body = await response.text()
+    expect(body).toContain("Event Body")
+    expect(body).toContain('href="/res/20220609_Event/style.css"')
+
+    await rm(fseRoot, { recursive: true, force: true })
+    db.close()
+  })
+
+  test("serves simple fse html via /events/:slug", async () => {
+    const db = createTestDatabase()
+    const repository = createPostRepository(db, TEST_BOARD_CONFIGS)
+
+    const fseRoot = path.resolve(import.meta.dir, "./.tmp-fse-root-simple")
+    await mkdir(fseRoot, { recursive: true })
+    await Bun.write(path.join(fseRoot, "Beginner.html"), "<h1>Beginner Event</h1>")
+
+    const handler = createApiHandler(repository, { fseRootDir: fseRoot })
+
+    const response = await handler(new Request("http://localhost/events/Beginner"))
+
+    expect(response.status).toBe(200)
+    expect(await response.text()).toContain("Beginner Event")
+
+    await rm(fseRoot, { recursive: true, force: true })
+    db.close()
+  })
+
+  test("serves fse resource file via /res/*", async () => {
+    const db = createTestDatabase()
+    const repository = createPostRepository(db, TEST_BOARD_CONFIGS)
+
+    const fseRoot = path.resolve(import.meta.dir, "./.tmp-fse-root-res")
+    const resourcePath = path.join(fseRoot, "res", "20220609_Event", "style.css")
+    await mkdir(path.dirname(resourcePath), { recursive: true })
+    await Bun.write(resourcePath, "body { color: red; }")
+
+    const handler = createApiHandler(repository, { fseRootDir: fseRoot })
+
+    const response = await handler(
+      new Request("http://localhost/res/20220609_Event/style.css"),
+    )
+
+    expect(response.status).toBe(200)
+    expect(await response.text()).toContain("color: red")
+
+    await rm(fseRoot, { recursive: true, force: true })
+    db.close()
+  })
 })
+
+

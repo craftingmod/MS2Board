@@ -17,6 +17,7 @@
   let errorMessage = ""
   let result: PagedResponse<PostListItem> | null = null
   let activeRequestToken = 0
+  let jumpPageInput = "1"
 
   $: query = (searchParams.get("q") ?? "").trim()
   $: page = Math.max(1, Number(searchParams.get("page") ?? "1") || 1)
@@ -27,6 +28,7 @@
       ? null
       : (boards.find((board) => board.slug === forcedBoardSlug)?.displayName ??
         forcedBoardSlug)
+  $: jumpPageInput = String(page)
 
   $: void loadPosts(effectiveBoardSlug, query, page)
 
@@ -106,12 +108,11 @@
   }
 
   function movePage(nextPage: number): void {
-    if (nextPage < 1) {
-      return
-    }
+    const maxPage = totalPages()
+    const boundedPage = Math.max(1, Math.min(nextPage, maxPage))
 
     const nextParams = new URLSearchParams(searchParams)
-    nextParams.set("page", String(nextPage))
+    nextParams.set("page", String(boundedPage))
 
     if (forcedBoardSlug !== null) {
       nextParams.delete("board")
@@ -126,6 +127,45 @@
     }
 
     return Math.max(1, Math.ceil(result.total / result.pageSize))
+  }
+
+  function visiblePageNumbers(): number[] {
+    const total = totalPages()
+
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, index) => index + 1)
+    }
+
+    if (page <= 4) {
+      return [1, 2, 3, 4, 5, total]
+    }
+
+    if (page >= total - 3) {
+      return [1, total - 4, total - 3, total - 2, total - 1, total]
+    }
+
+    return [1, page - 1, page, page + 1, total]
+  }
+
+  function shouldShowEllipsisAfter(pageNumber: number): boolean {
+    const numbers = visiblePageNumbers()
+    const index = numbers.indexOf(pageNumber)
+    if (index < 0 || index === numbers.length - 1) {
+      return false
+    }
+
+    return numbers[index + 1] - pageNumber > 1
+  }
+
+  function submitJumpPage(event: SubmitEvent): void {
+    event.preventDefault()
+
+    const parsed = Number(jumpPageInput)
+    if (!Number.isFinite(parsed)) {
+      return
+    }
+
+    movePage(Math.floor(parsed))
   }
 </script>
 
@@ -207,22 +247,64 @@
       {/each}
     </div>
 
-    <div class="row" style="margin-top: 14px; justify-content: flex-end;">
-      <button
-        type="button"
-        disabled={page <= 1}
-        on:click={() => movePage(page - 1)}
-      >
-        Previous
-      </button>
-      <span class="meta">Page {result.page} / {totalPages()}</span>
-      <button
-        type="button"
-        disabled={!result.hasNext}
-        on:click={() => movePage(page + 1)}
-      >
-        Next
-      </button>
+    <div class="row" style="margin-top: 14px; justify-content: space-between;">
+      <div class="row">
+        <button
+          type="button"
+          disabled={page <= 1}
+          on:click={() => movePage(page - 1)}
+        >
+          Previous
+        </button>
+
+        {#each visiblePageNumbers() as pageNumber}
+          <button
+            type="button"
+            class:active-page={pageNumber === page}
+            on:click={() => movePage(pageNumber)}
+            aria-current={pageNumber === page ? "page" : undefined}
+          >
+            {pageNumber}
+          </button>
+
+          {#if shouldShowEllipsisAfter(pageNumber)}
+            <span class="meta">...</span>
+          {/if}
+        {/each}
+
+        <button
+          type="button"
+          disabled={!result.hasNext}
+          on:click={() => movePage(page + 1)}
+        >
+          Next
+        </button>
+      </div>
+
+      <form class="row" on:submit={submitJumpPage} style="gap: 8px;">
+        <label class="meta" for="jump-page">Go to</label>
+        <input
+          id="jump-page"
+          type="number"
+          min="1"
+          max={totalPages()}
+          bind:value={jumpPageInput}
+          style="width: 84px;"
+        />
+        <button type="submit">Move</button>
+      </form>
     </div>
+
+    <p class="meta" style="margin: 8px 0 0 0; text-align: right;">
+      Page {result.page} / {totalPages()}
+    </p>
   {/if}
 </section>
+
+<style>
+  .active-page {
+    font-weight: 700;
+    border: 1px solid #1d4ed8;
+    color: #1d4ed8;
+  }
+</style>

@@ -2,6 +2,7 @@
   import type { BoardMeta, PostDetail } from "@ms2board/common"
   import { fetchPostDetail } from "../lib/api"
   import { formatDateTime } from "../lib/format"
+  import { sanitizeArchiveHtml } from "../lib/postContent"
 
   export let boardSlug: string
   export let articleId: number
@@ -16,11 +17,13 @@
   let loading = false
   let errorMessage = ""
   let post: PostDetail | null = null
+  let sanitizedContent = ""
   let activeRequestToken = 0
 
   $: void loadDetail(boardSlug, articleId)
   $: boardName =
     boards.find((board) => board.slug === boardSlug)?.displayName ?? boardSlug
+  $: sanitizedContent = post?.content ? sanitizeArchiveHtml(post.content) : ""
 
   async function loadDetail(slug: string, id: number): Promise<void> {
     const token = ++activeRequestToken
@@ -88,11 +91,34 @@
       <p>{post.summary}</p>
     {/if}
 
-    {#if post.content}
-      <pre
-        style="white-space: pre-wrap; overflow-wrap: anywhere; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px;">{post.content}</pre>
+    {#if sanitizedContent}
+      <div class="post-content">{@html sanitizedContent}</div>
     {:else}
       <p>No content available.</p>
     {/if}
   {/if}
 </section>
+
+<style>
+  .post-content {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    line-height: 1.5;
+  }
+
+  .post-content :global(img) {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .post-content :global(p) {
+    margin: 0;
+  }
+
+  .post-content :global(ul),
+  .post-content :global(ol) {
+    margin: 0;
+    padding-left: 20px;
+  }
+</style>

@@ -1,4 +1,6 @@
 import { Database } from "bun:sqlite"
+import { mkdir, rm } from "node:fs/promises"
+import path from "node:path"
 import { describe, expect, test } from "bun:test"
 import { BOARD_QUERY_CONFIGS } from "./board_query_config"
 import { createApiHandler } from "./app"
@@ -127,6 +129,31 @@ describe("API integration", () => {
     expect(body.articleId).toBe(1)
     expect(body.board.slug).toBe("free")
 
+    db.close()
+  })
+
+  test("serves archive image as avif regardless of requested extension", async () => {
+    const db = createTestDatabase()
+    const repository = createPostRepository(db, TEST_BOARD_CONFIGS)
+
+    const imageRoot = path.resolve(import.meta.dir, "./.tmp-image-root")
+    const imagePath = path.join(imageRoot, "knowhow", "17760", "17760_001.avif")
+
+    await mkdir(path.dirname(imagePath), { recursive: true })
+    await Bun.write(imagePath, "fake-avif")
+
+    const handler = createApiHandler(repository, {
+      imagesRootDir: imageRoot,
+    })
+
+    const response = await handler(
+      new Request("http://localhost/images/knowhow/17760/17760_001.png"),
+    )
+
+    expect(response.status).toBe(200)
+    expect(await response.text()).toBe("fake-avif")
+
+    await rm(imageRoot, { recursive: true, force: true })
     db.close()
   })
 })

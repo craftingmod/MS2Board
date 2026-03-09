@@ -10,6 +10,10 @@ export default defineConfig({
         target: process.env.VITE_PROXY_TARGET ?? "http://localhost:3000",
         changeOrigin: true,
       },
+      "/images": {
+        target: process.env.VITE_PROXY_TARGET ?? "http://localhost:3000",
+        changeOrigin: true,
+      },
     },
   },
 })
